@@ -13,8 +13,8 @@ config.enable_stream(realsense.stream.color, 640, 480, realsense.format.rgb8, 30
 pipe.start(config);
 
 % Definir los límites de distancia (en metros) para aislar el palet
-min_dist = 0.5;  % Distancia mínima en metros
-max_dist = 0.75;  % Distancia máxima en metros
+min_dist = 0.1;  % Distancia mínima en metros
+max_dist = 0.5;  % Distancia máxima en metros
 
 % Parámetros de captura de video
 num_frames = 50;  % Número de frames a capturar
