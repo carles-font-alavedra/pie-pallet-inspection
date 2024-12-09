@@ -12,8 +12,8 @@ config.enable_stream(realsense.stream.color, 640, 480, realsense.format.rgb8, 30
 pipe.start(config);
 
 % Definir los límites de distancia (en metros) para aislar el palet
-min_dist = 1.5;  % Distancia mínima en metros
-max_dist = 2.0;  % Distancia máxima en metros
+min_dist = 0.7;  % Distancia mínima en metros
+max_dist = 0.8;  % Distancia máxima en metros
 
 % Capturar el primer escaneo
 disp('Capturando el primer escaneo 3D...');
