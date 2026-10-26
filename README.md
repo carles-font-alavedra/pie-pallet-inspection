@@ -106,9 +106,38 @@ La máscara se limpia con apertura y cierre morfológicos (elemento estructurant
 circular de radio 5), se detectan bordes con Canny, y de las regiones conectadas
 se toma la de mayor área. Su bounding box da las dimensiones del palet.
 
+## Conclusiones
+
+Lo que el enfoque demostró:
+
+- El umbral de profundidad aísla el palet del fondo y de la estructura del
+  prototipo de forma fiable, siempre que la cámara esté a una altura conocida.
+- La D435i, pese a ser una cámara 3D de gama baja elegida por presupuesto, da
+  una nube de puntos con resolución suficiente para que la estructura de tablas
+  y los huecos entre ellas sean distinguibles a simple vista.
+- Las grietas y tablas faltantes aparecen como discontinuidades claras en la
+  nube de puntos, lo que valida la vía 3D como camino viable antes de invertir
+  en una cámara de gama alta.
+- La correlación de Pearson entre escaneos funciona como indicador de
+  desviación respecto a una referencia.
+
+Lo que quedó abierto:
+
+- Localización y clasificación automática del defecto, hoy a cargo del operador.
+- Calibración independiente de la altura de montaje.
+- Lectura directa desde la cámara en lugar de ficheros `.mat` pregrabados.
+
+Este fue uno de los cuatro enfoques evaluados en paralelo por el equipo. El
+objetivo de probar varios era decidir cuál merecía la inversión en hardware
+antes de comprometerse con uno.
+
 ## Limitaciones conocidas
 
-- La correlación detecta que algo se desvía, pero no dónde ni de qué tipo.
+- La correlación devuelve un único escalar para toda la imagen: indica cuánto
+  se desvía el palet respecto a la referencia, pero no da coordenadas. La
+  localización del daño se hace inspeccionando la nube de puntos o el mapa
+  de profundidad segmentado, donde las grietas y tablas faltantes se ven con
+  claridad. Automatizar ese paso quedó fuera del alcance del proyecto.
 - La conversión de píxeles a metros en la vía RGB usa un factor fijo calibrado
   para una distancia concreta; cambiar la altura de la cámara lo invalida.
 - El cálculo de tamaño de píxel vía FOV asume un plano a profundidad constante.
