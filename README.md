@@ -136,39 +136,49 @@ La máscara se limpia con apertura y cierre morfológicos (elemento estructurant
 circular de radio 5), se detectan bordes con Canny, y de las regiones conectadas
 se toma la de mayor área. Su bounding box da las dimensiones del palet.
 
-## Conclusiones
+## Resultados
 
-Lo que el enfoque demostró:
+**Lo que funcionó:**
 
-- El umbral de profundidad aísla el palet del fondo y de la estructura del
-  prototipo de forma fiable, siempre que la cámara esté a una altura conocida.
-- La D435i, pese a ser una cámara 3D de gama baja elegida por presupuesto, da
-  una nube de puntos con resolución suficiente para que la estructura de tablas
-  y los huecos entre ellas sean distinguibles a simple vista.
-- Las grietas y tablas faltantes aparecen como discontinuidades claras en la
-  nube de puntos.
-- La correlación de Pearson entre escaneos funciona como indicador de
-  desviación respecto a una referencia.
+- **Detección de fisuras grandes.** Las roturas y tablas faltantes de tamaño
+  apreciable aparecen como discontinuidades claras en la nube de puntos y se
+  detectan de forma consistente.
+- **Medición de dimensiones.** El ancho y alto del palet se obtienen con
+  precisión suficiente para el caso de uso.
+- **Identificación del tipo de palet.** A partir de esas medidas se distingue
+  el palet europeo (80 cm de ancho) del americano (100 cm), que era uno de los
+  requisitos del proyecto.
 
-Ninguna de estas conclusiones se sostiene por sí sola: las medidas obtenidas por
-esta vía se contrastaron con las de los otros tres enfoques del equipo —medición
-lateral, desde abajo y con perspectiva— sobre los mismos palets. Comparar los
-resultados entre métodos fue lo que permitió juzgar cuál era fiable y cuál
-merecía la inversión en una cámara de gama alta. Los datos de los otros enfoques
-están en el [repositorio del grupo](https://github.com/mahelbdlm/INT).
+**Lo que no funcionó:**
 
-Lo que quedó abierto:
+- **Las fisuras pequeñas se escapan.** Es el límite real del método tal como
+  quedó. Por debajo de cierto tamaño, el defecto no se separa del ruido propio
+  del sensor y no llega a detectarse. Para un PIE real esto importa, porque una
+  grieta pequeña puede propagarse en carga.
 
+Esta era precisamente la pregunta que el proyecto quería responder antes de
+gastar en hardware: si una cámara 3D de gama baja como la D435i daba resolución
+suficiente. La respuesta fue que para defectos estructurales grandes y para
+dimensionar el palet sí, y para fisuras finas no — lo que sitúa el listón de lo
+que habría que exigirle a una cámara mejor.
+
+Los resultados no se juzgaron en aislamiento: las medidas de esta vía se
+contrastaron con las de los otros tres enfoques del equipo —medición lateral,
+desde abajo y con perspectiva— sobre los mismos palets. Esa comparación entre
+métodos fue lo que permitió decidir qué era fiable. Los datos de los demás
+enfoques están en el [repositorio del grupo](https://github.com/mahelbdlm/INT).
+
+**Lo que quedó abierto:**
+
+- Detección de fisuras finas, que requeriría una cámara de mayor resolución o
+  un sensor distinto.
 - Localización y clasificación automática del defecto, hoy a cargo del operador.
 - Calibración independiente de la altura de montaje.
 - Lectura directa desde la cámara en lugar de ficheros `.mat` pregrabados.
 
-Este fue uno de los cuatro enfoques evaluados en paralelo por el equipo, y la
-decisión final salió de cruzar los resultados de todos ellos, no de ninguno por
-separado.
-
 ## Limitaciones conocidas
 
+- Las fisuras pequeñas no se detectan: quedan por debajo del ruido del sensor.
 - La correlación devuelve un único escalar para toda la imagen: indica cuánto
   se desvía el palet respecto a la referencia, pero no da coordenadas. La
   localización del daño se hace inspeccionando la nube de puntos o el mapa
