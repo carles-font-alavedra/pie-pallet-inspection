@@ -9,6 +9,36 @@ cámaras 3D en lugar de inspección manual.
 
 ![Pipeline](img/pipeline.svg)
 
+## El prototipo
+
+Además del módulo de software, me encargué del **diseño y construcción del
+prototipo físico**: el modelo CAD, el montaje, el posicionamiento y calibración
+de las cámaras, y las máscaras de los transportadores.
+
+![Modelo CAD del PIE](img/prototipo_cad.png)
+
+No se podía tener un PIE a escala real en el laboratorio, así que el prototipo
+invierte la geometría: el palet desliza **por debajo** de las máscaras y las
+cámaras se montan **encima**, simulando la vista desde la parte inferior de los
+transportadores de un PIE real. Una primera versión con el palet deslizando por
+encima se descartó porque no se conseguía que corriese bien sobre las máscaras.
+
+Dos cámaras, una perpendicular al transportador y otra a 45°, sobre un soporte
+ajustable para poder variar ángulo y altura entre pruebas:
+
+![Soporte de cámaras](img/soporte_camaras.png)
+
+Las máscaras reproducen los dos tipos de transportador de un PIE —rodillos y
+cadenas— para comprobar que el método aguanta en ambos casos. La de rodillos,
+montada sobre el palet de pruebas:
+
+![Máscara de rodillos](img/mascara_rodillos.jpg)
+
+Los criterios de diseño fueron que se pudiera desmontar con facilidad, que
+fuera lo bastante rígido para que las medidas no bailaran, y que permitiera
+ajustes a medida que el software pedía cambios. El firmware del motor paso a
+paso que mueve la plataforma lo escribió otro miembro del equipo.
+
 ## Enfoque
 
 El equipo evaluó **cuatro aproximaciones** en paralelo para no quedar atado a una
