@@ -116,10 +116,16 @@ Lo que el enfoque demostró:
   una nube de puntos con resolución suficiente para que la estructura de tablas
   y los huecos entre ellas sean distinguibles a simple vista.
 - Las grietas y tablas faltantes aparecen como discontinuidades claras en la
-  nube de puntos, lo que valida la vía 3D como camino viable antes de invertir
-  en una cámara de gama alta.
+  nube de puntos.
 - La correlación de Pearson entre escaneos funciona como indicador de
   desviación respecto a una referencia.
+
+Ninguna de estas conclusiones se sostiene por sí sola: las medidas obtenidas por
+esta vía se contrastaron con las de los otros tres enfoques del equipo —medición
+lateral, desde abajo y con perspectiva— sobre los mismos palets. Comparar los
+resultados entre métodos fue lo que permitió juzgar cuál era fiable y cuál
+merecía la inversión en una cámara de gama alta. Los datos de los otros enfoques
+están en el [repositorio del grupo](https://github.com/mahelbdlm/INT).
 
 Lo que quedó abierto:
 
@@ -127,9 +133,9 @@ Lo que quedó abierto:
 - Calibración independiente de la altura de montaje.
 - Lectura directa desde la cámara en lugar de ficheros `.mat` pregrabados.
 
-Este fue uno de los cuatro enfoques evaluados en paralelo por el equipo. El
-objetivo de probar varios era decidir cuál merecía la inversión en hardware
-antes de comprometerse con uno.
+Este fue uno de los cuatro enfoques evaluados en paralelo por el equipo, y la
+decisión final salió de cruzar los resultados de todos ellos, no de ninguno por
+separado.
 
 ## Limitaciones conocidas
 
