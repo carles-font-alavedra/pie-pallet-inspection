@@ -1,218 +1,207 @@
-# PIE — Módulo de medición 3D con Intel RealSense D435i
+# PIE — 3D Pallet Measurement Module with Intel RealSense D435i
 
-Pipeline en MATLAB para capturar y medir palets mediante cámara de profundidad,
-desarrollado como parte de la asignatura INT (ETSETB–UPC, curso 2024/25).
+MATLAB pipeline for capturing and measuring pallets with a depth camera,
+developed as part of the INT course (ETSETB–UPC, 2024/25).
 
-El objetivo del proyecto era detectar defectos en palets (medidas incorrectas,
-tablas faltantes) dentro de un Product Inspection Entry automatizado, usando
-cámaras 3D en lugar de inspección manual.
+The project's goal was to detect pallet defects (incorrect dimensions, missing
+boards) inside an automated Product Inspection Entry, using 3D cameras instead
+of manual inspection.
 
-![Pipeline](img/pipeline.svg)
+## The prototype
 
-## El prototipo
+Beyond the software module, I was responsible for the **design and construction
+of the physical prototype**: the CAD model, the assembly, camera positioning and
+calibration, and the conveyor masks.
 
-Además del módulo de software, me encargué del **diseño y construcción del
-prototipo físico**: el modelo CAD, el montaje, el posicionamiento y calibración
-de las cámaras, y las máscaras de los transportadores.
+![PIE CAD model](img/prototipo_cad.png)
 
-![Modelo CAD del PIE](img/prototipo_cad.png)
+A full-scale PIE wasn't possible in the lab, so the prototype inverts the
+geometry: the pallet slides **underneath** the masks and the cameras are mounted
+**above**, simulating the view from below the conveyors of a real PIE. An
+earlier version with the pallet sliding on top of the masks was discarded
+because it wouldn't run smoothly.
 
-No se podía tener un PIE a escala real en el laboratorio, así que el prototipo
-invierte la geometría: el palet desliza **por debajo** de las máscaras y las
-cámaras se montan **encima**, simulando la vista desde la parte inferior de los
-transportadores de un PIE real. Una primera versión con el palet deslizando por
-encima se descartó porque no se conseguía que corriese bien sobre las máscaras.
+Two cameras, one perpendicular to the conveyor and one at 45°, on an adjustable
+support so angle and height could be varied between tests:
 
-Dos cámaras, una perpendicular al transportador y otra a 45°, sobre un soporte
-ajustable para poder variar ángulo y altura entre pruebas:
+![Camera support](img/soporte_camaras.png)
 
-![Soporte de cámaras](img/soporte_camaras.png)
+The masks reproduce the two conveyor types found in a PIE — rollers and chains —
+to check that the method holds in both cases. The roller mask, mounted over the
+test pallet:
 
-Las máscaras reproducen los dos tipos de transportador de un PIE —rodillos y
-cadenas— para comprobar que el método aguanta en ambos casos. La de rodillos,
-montada sobre el palet de pruebas:
+![Roller mask](img/mascara_rodillos.jpg)
 
-![Máscara de rodillos](img/mascara_rodillos.jpg)
+The design criteria were that it could be disassembled easily, that it was rigid
+enough for measurements not to drift, and that it allowed adjustments as the
+software side asked for changes. The stepper motor firmware that drives the
+platform was written by another team member.
 
-Los criterios de diseño fueron que se pudiera desmontar con facilidad, que
-fuera lo bastante rígido para que las medidas no bailaran, y que permitiera
-ajustes a medida que el software pedía cambios. El firmware del motor paso a
-paso que mueve la plataforma lo escribió otro miembro del equipo.
+## Approach
 
-## Enfoque
+The team evaluated **four approaches** in parallel, so as not to commit to a
+single solution before investing in an expensive camera: side measurement, from
+below, with perspective, and via 3D point cloud.
 
-El equipo evaluó **cuatro aproximaciones** en paralelo para no quedar atado a una
-sola solución antes de invertir en una cámara cara: medición lateral, desde abajo,
-con perspectiva, y mediante nube de puntos 3D.
+This repository covers the **fourth approach: pallet integrity checking using a
+3D point map**, with an Intel RealSense D435i — a low-end 3D camera chosen under
+budget constraints — to detect cracks and missing boards.
 
-Este repositorio corresponde al **cuarto enfoque: comprobación de integridad del
-palet mediante mapa de puntos 3D**, usando una Intel RealSense D435i (una cámara
-3D de gama baja, elegida por restricciones de presupuesto) para detectar grietas
-y tablas faltantes.
+## My contribution
 
-## Mi aportación
-
-Este repositorio contiene **únicamente la parte que desarrollé yo**: la captura
-de profundidad y el pipeline de medición sobre nube de puntos. El proyecto
-completo fue un trabajo de grupo y está disponible en
+This repository contains **only the part I developed**: depth capture and the
+point-cloud measurement pipeline. The full project was team work and lives at
 [mahelbdlm/INT](https://github.com/mahelbdlm/INT).
 
-## Resultados
+## Captures
 
-El palet físico utilizado en el prototipo, con tablas desgastadas y huecos
-irregulares:
+The physical pallet used in the prototype, with worn boards and irregular gaps:
 
-![Palet real](img/palet_real.jpg)
+![Real pallet](img/palet_real.jpg)
 
-Reconstrucción en nube de puntos a partir del mapa de profundidad de la D435i.
-Se distingue la estructura de tablas y los huecos entre ellas:
+Point cloud reconstruction from the D435i depth map. The board structure and the
+gaps between boards are distinguishable:
 
-![Nube de puntos](img/nube_puntos.png)
+![Point cloud](img/nube_puntos.png)
 
-Vista en perspectiva de la misma captura, coloreada por altura:
+Perspective view of the same capture, colored by height:
 
-![Nube de puntos en perspectiva](img/nube_puntos_perspectiva.png)
+![Point cloud, perspective view](img/nube_puntos_perspectiva.png)
 
-Vista cenital de la nube de puntos durante una inspección:
+Top-down view of the point cloud during an inspection:
 
-![Vista cenital de la nube de puntos](img/deteccion_defectos.png)
+![Top-down view of the point cloud](img/deteccion_defectos.png)
 
-## Cómo se detectan los defectos
+## How defects are detected
 
-El módulo no clasifica defectos directamente: mide el palet y lo compara contra
-una referencia. Tres mecanismos encadenados.
+The module doesn't classify defects directly: it measures the pallet and
+compares it against a reference. Three chained mechanisms.
 
-### 1. Segmentación por umbral de profundidad
+### 1. Depth threshold segmentation
 
-El mapa de profundidad llega en milímetros y se convierte a metros. El palet se
-aísla del fondo y del suelo quedándose solo con los píxeles dentro de una banda
-de distancia conocida:
+The depth map arrives in millimeters and is converted to meters. The pallet is
+isolated from the background and the floor by keeping only the pixels within a
+known distance band:
 
 ```matlab
-min_dist = 0.1;   % metros
+min_dist = 0.1;   % meters
 max_dist = 0.75;
 palet_mask = (depth >= min_dist) & (depth <= max_dist);
 ```
 
-La banda depende de la altura a la que esté montada la cámara en el prototipo.
-Todo lo que cae fuera (suelo, estructura, cinta) se descarta antes de medir.
+The band depends on the height at which the camera is mounted on the prototype.
+Everything outside it (floor, structure, conveyor) is discarded before measuring.
 
-### 2. Comparación por correlación de Pearson
+### 2. Pearson correlation comparison
 
-Se capturan dos escaneos y se comparan píxel a píxel sobre la profundidad
-segmentada, calculando el coeficiente de correlación de Pearson entre ambos
-vectores y expresándolo en porcentaje.
+Two scans are captured and compared pixel by pixel over the segmented depth,
+computing the Pearson correlation coefficient between both vectors and
+expressing it as a percentage.
 
-La idea: un palet íntegro comparado con la referencia da una correlación alta.
-Una tabla rota, un hueco o una grieta cambian la geometría local y hacen caer
-ese porcentaje. Sirve como indicador de desviación, no como localizador del
-defecto concreto.
+The idea: an intact pallet compared against the reference yields a high
+correlation. A broken board, a gap or a crack changes the local geometry and
+drives that percentage down. It works as a deviation indicator, not as a
+locator of the specific defect.
 
-### 3. Medición de dimensiones
+### 3. Dimension measurement
 
-Dos caminos independientes, para contrastar resultados:
+Two independent paths, to cross-check results:
 
-**Vía profundidad** (`mesure_depth_solution.m`) — sobre un ROI seleccionado, el
-tamaño de píxel se deriva del campo de visión de la D435i (87° × 58°) y la
-resolución de captura:
+**Via depth** (`mesure_depth_solution.m`) — over a selected ROI, pixel size is
+derived from the D435i field of view (87° × 58°) and the capture resolution:
 
 ```matlab
-pixelSizeX = (2 * tan(deg2rad(87/2)) / 640) * 1000;   % mm/píxel
+pixelSizeX = (2 * tan(deg2rad(87/2)) / 640) * 1000;   % mm/pixel
 ```
 
-Con eso se obtienen ancho y alto en milímetros, más la profundidad media del
-ROI. Las medidas se contrastan contra las normalizadas: 80 cm de ancho el palet
-europeo, 100 cm el americano.
+That yields width and height in millimeters, plus the mean depth of the ROI.
+Measurements are checked against the standard ones: 80 cm wide for the European
+pallet, 100 cm for the American one.
 
-**Vía RGB** (`mesures_rgb.m`) — se restan dos frames consecutivos en escala de
-grises y se umbraliza la diferencia para aislar lo que se ha movido:
+**Via RGB** (`mesures_rgb.m`) — two consecutive grayscale frames are subtracted
+and the difference is thresholded to isolate what moved:
 
 ```matlab
 diff_image  = abs(double(gray1) - double(gray2));
 motion_mask = diff_image > 30;
 ```
 
-La máscara se limpia con apertura y cierre morfológicos (elemento estructurante
-circular de radio 5), se detectan bordes con Canny, y de las regiones conectadas
-se toma la de mayor área. Su bounding box da las dimensiones del palet.
+The mask is cleaned with morphological opening and closing (disk-shaped
+structuring element, radius 5), edges are detected with Canny, and the largest
+connected region is kept. Its bounding box gives the pallet dimensions.
 
-## Resultados
+## Results
 
-**Lo que funcionó:**
+**What worked:**
 
-- **Detección de fisuras grandes.** Las roturas y tablas faltantes de tamaño
-  apreciable aparecen como discontinuidades claras en la nube de puntos y se
-  detectan de forma consistente.
-- **Medición de dimensiones.** El ancho y alto del palet se obtienen con
-  precisión suficiente para el caso de uso.
-- **Identificación del tipo de palet.** A partir de esas medidas se distingue
-  el palet europeo (80 cm de ancho) del americano (100 cm), que era uno de los
-  requisitos del proyecto.
+- **Detection of large cracks.** Breaks and missing boards of appreciable size
+  show up as clear discontinuities in the point cloud and are detected
+  consistently.
+- **Dimension measurement.** Pallet width and height are obtained with enough
+  precision for the use case.
+- **Pallet type identification.** Those measurements distinguish the European
+  pallet (80 cm wide) from the American one (100 cm), which was one of the
+  project requirements.
 
-**Lo que no funcionó:**
+**What didn't work:**
 
-- **Las fisuras pequeñas se escapan.** Es el límite real del método tal como
-  quedó. Por debajo de cierto tamaño, el defecto no se separa del ruido propio
-  del sensor y no llega a detectarse. Para un PIE real esto importa, porque una
-  grieta pequeña puede propagarse en carga.
+- **Small fissures are missed.** This is the method's real limit as it stands.
+  Below a certain size, the defect doesn't separate from the sensor's own noise
+  and goes undetected. For a real PIE this matters, since a small crack can
+  propagate under load.
 
-Esta era precisamente la pregunta que el proyecto quería responder antes de
-gastar en hardware: si una cámara 3D de gama baja como la D435i daba resolución
-suficiente. La respuesta fue que para defectos estructurales grandes y para
-dimensionar el palet sí, y para fisuras finas no — lo que sitúa el listón de lo
-que habría que exigirle a una cámara mejor.
+This was precisely the question the project set out to answer before spending on
+hardware: whether a low-end 3D camera like the D435i offered enough resolution.
+The answer was yes for large structural defects and for dimensioning the pallet,
+and no for fine fissures — which sets the bar a better camera would have to
+clear.
 
-Los resultados no se juzgaron en aislamiento: las medidas de esta vía se
-contrastaron con las de los otros tres enfoques del equipo —medición lateral,
-desde abajo y con perspectiva— sobre los mismos palets. Esa comparación entre
-métodos fue lo que permitió decidir qué era fiable. Los datos de los demás
-enfoques están en el [repositorio del grupo](https://github.com/mahelbdlm/INT).
+The results weren't judged in isolation: measurements from this path were
+cross-checked against the team's other three approaches — side, from below and
+with perspective — on the same pallets. That comparison between methods is what
+made it possible to decide what was reliable. Data from the other approaches is
+in the [group repository](https://github.com/mahelbdlm/INT).
 
-**Lo que quedó abierto:**
+**What's still open:**
 
-- Detección de fisuras finas, que requeriría una cámara de mayor resolución o
-  un sensor distinto.
-- Localización y clasificación automática del defecto, hoy a cargo del operador.
-- Calibración independiente de la altura de montaje.
-- Lectura directa desde la cámara en lugar de ficheros `.mat` pregrabados.
+- Detection of fine fissures, which would require a higher-resolution camera or
+  a different sensor.
+- Automatic localization and classification of the defect. The correlation
+  returns a single scalar for the whole image: it indicates how far the pallet
+  deviates from the reference, but gives no coordinates. Locating the damage is
+  done by inspecting the point cloud or the segmented depth map, where cracks
+  and missing boards are clearly visible. Automating that step fell outside the
+  project's scope.
+- Calibration independent of mounting height. The pixel-to-meter conversion on
+  the RGB path uses a fixed factor calibrated for one specific distance, and the
+  FOV-based pixel size calculation assumes a plane at constant depth.
+- Reading directly from the camera instead of pre-recorded `.mat` files.
+- Automatic ROI selection in `mesure_depth_solution.m`, currently manual.
 
-## Limitaciones conocidas
+## Structure
 
-- Las fisuras pequeñas no se detectan: quedan por debajo del ruido del sensor.
-- La correlación devuelve un único escalar para toda la imagen: indica cuánto
-  se desvía el palet respecto a la referencia, pero no da coordenadas. La
-  localización del daño se hace inspeccionando la nube de puntos o el mapa
-  de profundidad segmentado, donde las grietas y tablas faltantes se ven con
-  claridad. Automatizar ese paso quedó fuera del alcance del proyecto.
-- La conversión de píxeles a metros en la vía RGB usa un factor fijo calibrado
-  para una distancia concreta; cambiar la altura de la cámara lo invalida.
-- El cálculo de tamaño de píxel vía FOV asume un plano a profundidad constante.
-- `mesure_depth_solution.m` requiere seleccionar el ROI a mano.
-- Los scripts parten de capturas `.mat`; una versión de producción leería los
-  frames directamente de la cámara.
-
-## Estructura
-
-| Fichero | Qué hace |
+| File | What it does |
 |---|---|
-| `connectDepth.m` | Configura el pipeline de la D435i (resolución y fps parametrizables) |
-| `depthCapture.m` | Captura de frames de profundidad |
-| `scan2images.m` | Conversión del escaneo a secuencia de imágenes |
-| `scan2mascara.m` | Aísla el palet por umbral de distancia y genera la máscara |
-| `mesures_rgb.m` | Medición sobre canal RGB, con detección de movimiento entre frames |
-| `mesure_depth_solution.m` | Medición sobre mapa de profundidad vía Image Acquisition Toolbox |
-| `video_mesura.m` | Medición sobre secuencias de vídeo |
-| `janvideo.m` | Utilidad de reproducción de capturas |
-| `prueba1.m` | Script de pruebas del pipeline |
-| `indent.m` | Utilidad auxiliar |
+| `connectDepth.m` | Configures the D435i pipeline (resolution and fps parameterizable) |
+| `depthCapture.m` | Depth frame capture |
+| `scan2images.m` | Converts a scan into an image sequence |
+| `scan2mascara.m` | Isolates the pallet by distance threshold and builds the mask |
+| `mesures_rgb.m` | RGB-channel measurement, with motion detection between frames |
+| `mesure_depth_solution.m` | Depth-map measurement via Image Acquisition Toolbox |
+| `video_mesura.m` | Measurement over video sequences |
+| `janvideo.m` | Capture playback utility |
+| `prueba1.m` | Pipeline test script |
+| `indent.m` | Helper utility |
 
-## Requisitos
+Source comments are in Spanish, as originally written.
 
-- MATLAB (probado con R2024a)
+## Requirements
+
+- MATLAB (tested on R2024a)
 - Image Processing Toolbox / Computer Vision Toolbox
 - Intel RealSense D435i + SDK
 
-## Contexto
+## Context
 
-Desarrollado entre octubre y diciembre de 2024. El historial original de estos
-commits está en el repositorio del grupo enlazado arriba.
+Developed between October and December 2024. The original commit history for
+this work is in the group repository linked above.
